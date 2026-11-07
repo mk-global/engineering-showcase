@@ -1,0 +1,10 @@
+{
+  // One sentence per line makes long lines normal; tables and links are long too.
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", "examples/tickets/**", ".github/ISSUE_TEMPLATE/**"]
+}

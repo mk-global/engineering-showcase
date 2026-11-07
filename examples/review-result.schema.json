@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:example:engineering-showcase:review-result",
+  "title": "Model review result (illustrative)",
+  "description": "The shape a model must return for the deterministic controller to decide a review. Written for the engineering showcase as a JSON Schema rendering of the reviewer's contract; the field limits match the real one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "confidence", "summary", "findings", "files_inspected"],
+  "properties": {
+    "verdict": { "enum": ["PASS", "CHANGES_REQUIRED", "NEEDS_DEEPER_REVIEW"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 8000 },
+    "files_inspected": {
+      "type": "array",
+      "maxItems": 500,
+      "items": { "type": "string", "maxLength": 500 }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "title", "file", "evidence", "impact", "recommendation", "confidence"],
+        "properties": {
+          "severity": { "enum": ["P1", "P2", "P3", "INFO"] },
+          "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+          "file": { "type": "string", "maxLength": 500 },
+          "line": { "type": ["integer", "null"], "minimum": 0 },
+          "evidence": { "type": "string", "maxLength": 4000 },
+          "impact": { "type": "string", "maxLength": 4000 },
+          "recommendation": { "type": "string", "maxLength": 4000 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "origin": {
+            "enum": ["introduced", "restored_baseline"],
+            "description": "A model's claim that a finding is in code restored by a verified rollback. The controller acts on it only when its own proof agrees."
+          }
+        }
+      }
+    }
+  }
+}

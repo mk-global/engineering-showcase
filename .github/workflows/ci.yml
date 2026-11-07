@@ -1,0 +1,76 @@
+# Documentation CI for a public repository.
+# Runs only on GitHub-hosted runners, with a read-only token and no secrets.
+# Every action is pinned to a full commit SHA; tools are pinned by version and checksum.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - name: Check out the full history for the secret scan
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Install pinned documentation tools
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx --no-install puppeteer browsers install chrome-headless-shell
+
+      - name: Structure, freshness, links, JSON, style and disclosure patterns
+        run: python3 scripts/check_docs.py check
+
+      - name: Markdown lint
+        run: npx --no-install markdownlint-cli2
+
+      - name: Render every Mermaid diagram
+        run: |
+          python3 scripts/check_docs.py extract-mermaid .mermaid-out
+          for diagram in .mermaid-out/*.mmd; do
+            echo "rendering ${diagram}"
+            npx --no-install mmdc --quiet --puppeteerConfigFile .puppeteer.json \
+              --input "${diagram}" --output "${diagram%.mmd}.svg"
+          done
+
+      - name: Example and checker tests
+        run: |
+          python3 -m unittest discover -s examples/verdict-policy -p 'test_*.py' -v
+          python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
+      - name: Secret scan of the full history
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}" gitleaks
+          "${RUNNER_TEMP}/gitleaks" git --redact --no-banner --exit-code 1 .

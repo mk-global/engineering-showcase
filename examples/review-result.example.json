@@ -1,0 +1,32 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "confidence": 0.86,
+  "summary": "Illustrative result. The change adds automatic retries to the order-capture client, but it retries a payment capture request that is not idempotent, so a timeout after the provider accepted the first request can charge the customer twice.",
+  "files_inspected": [
+    "repo/src/payments/capture.ts",
+    "repo/src/payments/retry.ts"
+  ],
+  "findings": [
+    {
+      "severity": "P1",
+      "title": "Non-idempotent capture is retried after a timeout",
+      "file": "src/payments/capture.ts",
+      "line": 42,
+      "evidence": "capture() is wrapped in withRetry() at line 42 and sends no idempotency key; a timeout does not prove the provider rejected the first request.",
+      "impact": "A slow provider response can produce two captures for one order.",
+      "recommendation": "Send a stable idempotency key derived from the order ID, or retry only errors the provider documents as safe to retry, and add a test where the first attempt times out after succeeding.",
+      "confidence": 0.9,
+      "origin": "introduced"
+    },
+    {
+      "severity": "P3",
+      "title": "Retry delay comment states the wrong unit",
+      "file": "src/payments/retry.ts",
+      "line": 7,
+      "evidence": "The comment says seconds; the constant is used as milliseconds.",
+      "impact": "Misleading for the next reader.",
+      "recommendation": "Correct the comment.",
+      "confidence": 0.95
+    }
+  ]
+}
