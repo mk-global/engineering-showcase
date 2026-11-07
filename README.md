@@ -16,7 +16,7 @@ Every capability carries a status, and only what is marked **Implemented** runs 
 ## How work moves through the system
 
 ```mermaid
-flowchart LR
+flowchart TD
     founder(["Founder decision"]) --> ticket["Ticket with acceptance criteria"]
     ticket --> agent["AI agent implements<br/>in an isolated account"]
     agent -->|"one-repository token,<br/>minted per command"| pr["Pull request"]
