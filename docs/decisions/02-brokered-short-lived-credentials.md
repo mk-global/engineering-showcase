@@ -24,7 +24,7 @@ When the App gained a second repository, the agent account could mint tokens the
 
 Move the key to a separate service account, a key broker, on 2026-10-13:
 
-- a **new** key was generated directly into the broker's custody, and the key the agent had held was deleted from the App's settings, so no copy of the App key the agent ever held remains valid;
+- a **new** key was generated and placed only in the broker's custody, and the key the agent had held was deleted from the App's settings, so no copy of the App key the agent ever held remains valid;
 - the agent asks the broker over a Unix socket, and the broker identifies the caller from the kernel's peer credentials, never from the request;
 - the broker mints only exactly one allowlisted repository with one allowlisted profile, verifies the result, and the client verifies it again;
 - if the broker is unavailable, the agent has no GitHub access. There is no fallback to a local key, a personal token or the founder's credentials.
@@ -37,7 +37,7 @@ Move the key to a separate service account, a key broker, on 2026-10-13:
 
 ## Result
 
-Every GitHub operation the agent performs uses a token that is scoped to one repository and carries exactly the permissions of one allowlisted profile.
+Every token the agent receives is scoped to one repository and carries only permissions of one allowlisted profile.
 Tokens are normally revoked when the command ends; GitHub's one-hour expiry is the hard bound, and repository scope, not lifetime, is the enforced boundary.
 The agent cannot read the key or sign a JWT, and the broker mints only what its installed policy grants.
 The design and its tests are on the [authorization page](../architecture/github-authorization.md).
