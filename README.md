@@ -55,7 +55,7 @@ flowchart TD
     ci --> gate{"Ruleset: every<br/>required check passed<br/>at this exact head?"}
     review -->|"status pinned to the<br/>reviewer's identity"| gate
     gate -->|"yes"| merge["Merge"]
-    gate -->|"no: blocked until<br/>it passes"| agent
+    gate -->|"no: blocked; fixed in a<br/>founder-started session"| agent
     merge -.->|"target: on a push<br/>to a staging branch"| staging["Staging deployment<br/>of the exact commit"]
     staging -.-> prod["Founder-approved<br/>production promotion"]
     %% An invisible spacer keeps the last node clear of the pan and zoom
