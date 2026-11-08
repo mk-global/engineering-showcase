@@ -169,7 +169,7 @@ This repository is the second member of that category, after CreatorBrio.
 
 Status: **Built, not in service.**
 
-The target behavior: on every push to a product's staging branch, deploy exactly that commit to the product's staging project, wait a bounded time for the hosting provider to serve it, prove that the served build is that commit, and prove it talks to the staging backend and not to a legacy or production one.
+The target behavior: on every push to a product's staging branch, deploy exactly that commit to the product's staging project, wait a bounded time for the hosting provider to serve it, prove that the served build is that commit, and check that it references the staging backend and not a legacy or production one.
 
 What is built:
 

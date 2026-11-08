@@ -38,7 +38,7 @@ Every capability carries a [status label](#status-labels), and only what is mark
   Ticket and pull-request policy, runner policy and a product repository standard are released as tagged versions, which by policy are never moved, and the governed private repositories pin them by full commit SHA; public repositories follow a separate model.
   An onboarding operation audits the organization against its declared state and, since 2026-11-08, fails a repository whose default branch does not carry the released versions.
 - **Built, not in service: [staging delivery](docs/workflows/delivery-lifecycle.md#staging).**
-  A staging adapter that deploys an exact commit, waits until it is served, and checks that the served build talks to the staging backend is built and tested.
+  A staging adapter that deploys an exact commit, waits until it is served, and checks that the served build references the expected staging backend and no forbidden one is built and tested.
   No product deploys through it yet.
 - **Planned: [production promotion](docs/workflows/delivery-lifecycle.md#production-promotion-and-rollback).**
   Artifact promotion, founder approval bound to one release candidate, and rehearsed rollback are designed and not built.

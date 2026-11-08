@@ -132,7 +132,7 @@ It checks, in broad groups:
 - **Real network behavior.** For each checkout, a read and a dry-run push are made against GitHub, and the check reads Git's own HTTP trace to confirm no `Authorization` header was sent. A successful push always fails the check.
 - **Container engines.** No engine answers the Docker CLI, and no Docker host or context is set in the environment.
 - **Broker key.** The broker's key directory cannot be listed and the key cannot be opened.
-- **Tools.** Every required tool resolves outside every other user's home.
+- **Tools.** Every required tool's command path lies outside every other user's home.
 
 Two rules make the result trustworthy rather than optimistic.
 A probe that cannot be decided, for example because GitHub is unreachable, is `UNVERIFIED`, and `UNVERIFIED` fails the run.
