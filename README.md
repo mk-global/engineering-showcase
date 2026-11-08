@@ -1,67 +1,109 @@
 # Governed AI-assisted engineering
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
+
+This repository describes a private engineering platform that lets an AI coding agent do real implementation work on my products while holding as little authority as possible.
+I built it because an agent that runs as its developer's own account can use every credential that account holds, and an agent that checks its own work is not an independent check.
+Today the platform runs the agent under its own restricted operating-system account, gives it a GitHub token for one repository at a time, has a separate local AI reviewer judge the exact commit it produced, and lets GitHub merge only when every required check passed at that commit.
+To explore, start with the [operating model](docs/operating-model.md), then the [evidence and status page](docs/evidence/README.md) for what is proven and what is not.
 
 I'm Manish Kumar.
-I've spent about twenty years in engineering, cloud infrastructure, SRE, security and technical leadership.
-Since August 2026 I have been building the engineering platform my own products are developed on, and this repository explains how it works.
+I've spent about twenty years in engineering, cloud infrastructure, SRE, security and technical leadership, and since August 2026 I have been building this platform, which my own products are developed on.
+Its source is private, so this repository explains its architecture, the decisions behind it, the mistakes that shaped it and the evidence for what it does today, without publishing the operational details that keep it safe.
 
-The short version: an AI coding agent implements ticketed work under its own restricted operating-system identity, a separate local AI reviewer independently reviews the exact commit it produced, a deterministic controller decides whether that review is good enough, and GitHub enforces the result.
+## The problem
+
+AI coding agents write code quickly; the harder engineering question is what authority they hold while they do.
+An agent is usually run as the developer's own user, so it can read their SSH keys, their GitHub CLI login and every other credential that user can read, and no GitHub setting can tell its actions apart from the developer's.
+If the same agent reviews its own change, the context that made a mistake is the context checking for it.
+And a control that exists only as a habit, such as reading every diff before merging, stops existing the first time merging is automated.
+The platform's answer is to give each actor its own identity with an explicit, enforced list of what it may do, and to let deterministic checks, not an agent's claim, decide when work is done.
 Nothing merges because an agent says it is finished.
 
-The platform itself lives in a private repository.
-This showcase describes its architecture, the decisions behind it, the mistakes that shaped it and the evidence for what it does today, without publishing the operational details that keep it safe.
-Every capability carries a status, and only what is marked **Implemented** runs in full today.
+## What runs today
+
+Every capability carries a [status label](#status-labels), and only what is marked Implemented runs in full today.
+
+- **Implemented: [isolated engineering agent](docs/architecture/isolated-agent.md).**
+  The coding agent runs as a separate, non-admin macOS account that cannot read the founder's credentials and has no GitHub identity of its own.
+  A negative test run from inside the account checks this.
+- **Implemented: [brokered GitHub authorization](docs/architecture/github-authorization.md).**
+  For each command, the agent gets a GitHub App token for exactly one repository and one permission profile, from a broker that holds the only key, and every failure is a refusal.
+  The token is normally revoked when the command ends; GitHub's one-hour expiry is the hard bound.
+- **Implemented: [independent local AI reviewer](docs/architecture/independent-reviewer.md).**
+  A daemon under its own identity reviews pull requests in the repositories it is authorized for, at their exact head and base, on a local model, with no shell and no way to run pull-request code.
+  The model proposes findings, deterministic code decides the verdict, and the required status is pinned to the reviewer's identity, so no other identity's status can satisfy it.
+  Its independence has one recorded, accepted residual dependency, on its local model server, described in its [limitations](docs/architecture/independent-reviewer.md#limitations).
+- **Implemented: [governance as versioned components](docs/workflows/delivery-lifecycle.md#shared-governance-components).**
+  Ticket and pull-request policy, runner policy and a product repository standard are released as tagged versions, which by policy are never moved, and the governed private repositories pin them by full commit SHA; public repositories follow a separate model.
+  An onboarding operation audits the organization against its declared state and fails a repository whose default branch does not carry the released versions.
+- **Built, not in service: [staging delivery](docs/workflows/delivery-lifecycle.md#staging).**
+  A staging adapter that deploys an exact commit and proves the served build and its backend is built and tested.
+  No product deploys through it yet.
+- **Planned: [production promotion](docs/workflows/delivery-lifecycle.md#production-promotion-and-rollback).**
+  Artifact promotion, founder approval bound to one release candidate, and rehearsed rollback are designed and not built.
 
 ## How work moves through the system
 
 ```mermaid
 flowchart TD
-    founder(["Founder decision"]) --> ticket["Ticket with acceptance criteria"]
+    founder(["Founder decision"]) --> ticket["Ticket with<br/>acceptance criteria"]
     ticket --> agent["AI agent implements<br/>in an isolated account"]
-    agent -->|"one-repository token,<br/>minted per command"| pr["Pull request"]
+    agent -->|"one-repository token<br/>from the broker"| pr["Pull request"]
     pr --> ci["CI checks"]
     pr --> review["Independent local<br/>AI reviewer"]
-    ci --> gate{"Ruleset: every required<br/>check passed at this exact head?"}
-    review -->|"status pinned to the<br/>reviewer's own identity"| gate
-    gate -->|yes| merge["Native auto-merge"]
-    gate -->|no| agent
-    merge --> staging["Staging deployment<br/>of the exact commit"]
+    ci --> gate{"Ruleset: every<br/>required check passed<br/>at this exact head?"}
+    review -->|"status pinned to the<br/>reviewer's identity"| gate
+    gate -->|"yes"| merge["Merge"]
+    gate -->|"no: blocked until<br/>it passes"| agent
+    merge -.->|"target: on a push<br/>to a staging branch"| staging["Staging deployment<br/>of the exact commit"]
     staging -.-> prod["Founder-approved<br/>production promotion"]
+    %% An invisible spacer keeps the last node clear of the pan and zoom
+    %% controls GitHub draws over the bottom-right corner on narrow screens.
+    prod ~~~ spacer["<br/><br/><br/><br/>"]
 
-    classDef planned stroke-dasharray: 5 5,color:#666;
-    classDef partial stroke-width:3px;
+    classDef notinservice stroke-width:3px;
+    classDef planned stroke-dasharray: 6 4,font-style:italic;
+    classDef spacer fill:none,stroke:none;
+    class staging notinservice;
     class prod planned;
-    class staging partial;
+    class spacer spacer;
 ```
 
-Solid boxes are operating today.
-The thick border marks staging, which is partially implemented, and the dashed box is planned.
+Solid boxes and arrows run today; the thick border marks staging, which is built and tested but not in service; the dashed, italic box is planned; dotted arrows lead to work that does not run yet.
 The [operating model](docs/operating-model.md) walks through each step and who holds authority at it.
 
-## What I built
+## What this system does not do yet
 
-| Area | What it does | Status |
-| --- | --- | --- |
-| [Isolated engineering agent](docs/architecture/isolated-agent.md) | The coding agent runs as a separate non-admin macOS account that cannot read the founder's credentials and has no GitHub identity of its own. A negative test proves it from inside the account. | Implemented |
-| [Brokered GitHub authorization](docs/architecture/github-authorization.md) | The agent gets a GitHub App token for exactly one repository and one permission profile per command, from a broker that holds the only key. The token is revoked when the command ends, and every failure is a refusal. | Implemented |
-| [Independent local AI reviewer](docs/architecture/independent-reviewer.md) | A daemon under its own identity reviews every pull request at its exact head and base on a local model, with no shell and no ability to execute pull-request code. The model proposes findings, deterministic code decides the verdict, and the published status is pinned to the reviewer's identity so nothing else can satisfy it. | Implemented |
-| [Governance as versioned components](docs/workflows/delivery-lifecycle.md#shared-governance-components) | Ticket and pull-request policy, runner policy and a product repository standard are released as immutable versions that every repository pins by commit SHA, with an onboarding operation that audits the whole organization against its declared state. | Implemented |
-| [Delivery lifecycle](docs/workflows/delivery-lifecycle.md) | Exact-commit staging deployment with a served-identity check is built and tested. Artifact promotion, founder-bound production approval and rehearsed rollback are designed and not built. | Partially implemented |
+- **It does not deliver to production.** Nothing promotes a release to production under this model. Products under the platform standard do not deploy to production on merge; one older product deploys from its default branch under a recorded founder exception.
+- **It does not deploy staging.** The staging adapter is built and tested, but the workflow products would call is not released, so no product deploys through it.
+- **The reviewer does not run the code it reviews.** Build, test and runtime evidence do not inform its verdict, and half of its blocking findings in the audited month were wrong.
+- **The broker does not separate one agent session from another.** Any engineering session can request a token for any repository the agent may work on.
+- **Self-hosted CI runners are not a boundary against hostile code.** They persist between jobs, which is why public repositories never use them.
+- **One machine runs the agent, the reviewer, the model and the private runners.** Review stops when it sleeps.
+- **The agent cannot do container-based work.** The isolated execution worker that would allow it is planned.
+- **Not every governed repository has the standard branch rules yet,** and the latest live isolation proof was run with an older copy of the checker; both are recorded on the [evidence page](docs/evidence/README.md).
+
+The [roadmap](docs/roadmap.md) orders the planned work.
 
 ## The evidence, including the uncomfortable parts
 
 A point-in-time audit of the reviewer on 2026-11-01 found that 9 of its 18 blocking findings that month were false positives.
-It also found that every one of its real findings was something no test or CI check had caught, including a database permission change that would have broken a dashboard for every user because the tests mocked the database.
-The final review of a pull request took a median of 7.7 minutes to run.
-The long waits came from queueing behind other reviews, which reached 89.5 minutes at the 95th percentile.
+It also found that none of its 9 real findings had been caught by a test or CI check, including a database permission change that would have broken a dashboard for every user because the tests mocked the database.
+For the two material findings, that was inferred by reading the tests at the reviewed head, because their CI results were not observable.
 
-Those numbers, their method and their limits are in the [evidence index](docs/evidence/README.md).
+Across the 30 most recently merged pull requests in that audit, the final review of a pull request took a median of 7.7 minutes to run.
+The long waits came from queueing behind other reviews: a median of about 3.4 minutes and about 92 minutes at the 95th percentile.
+An earlier version of this page gave queue figures computed on 31 values; the [evidence page](docs/evidence/README.md#reviewer-audit-2026-11-01) explains the correction, the method and the limits.
+
 I have not measured deployment frequency, engineering effort saved or the reviewer's recall, and the showcase does not claim them.
 
-For scale: the platform repository has 386 commits, 136 merged pull requests and 205 tickets between 2026-08-13 and 2026-11-07.
+For scale: as of the morning of 2026-11-07, the platform repository had 386 commits, 136 merged pull requests and 205 tickets since 2026-08-13.
 
-## A fifteen-minute reading path
+## Reading path
+
+The pages below, with the six decision records, total about 13,000 words, roughly an hour.
+For a ten-minute version, read this page and the operating model.
 
 1. [Operating model](docs/operating-model.md): the whole flow and the design philosophy behind it.
 2. [Independent local AI reviewer](docs/architecture/independent-reviewer.md): the deepest technical piece.
