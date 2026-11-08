@@ -48,6 +48,12 @@ flowchart TD
     classDef planned stroke-dasharray: 6 4,font-style:italic;
     class sd,si notinservice;
     class rc,fa,pp,rb planned;
+
+    %% An invisible spacer keeps the diagram clear of the pan and zoom
+    %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
+    rb ~~~ spacer["<br/><br/><br/><br/>"]
+    classDef spacer fill:none,stroke:none;
+    class spacer spacer;
 ```
 
 Solid boxes and arrows run today; the thick border marks staging, which is built and tested but not in service; dashed, italic boxes are planned; dotted arrows lead to work that does not run yet.

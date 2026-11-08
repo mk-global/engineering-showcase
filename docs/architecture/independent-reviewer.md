@@ -51,42 +51,44 @@ The sealed release's configuration points the endpoint at a loopback address, so
 ## From pull request to merge
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}}}%%
 sequenceDiagram
     autonumber
-    actor Agent as Engineering agent
+    actor Agent as Engineering<br/>agent
     participant GH as GitHub
-    participant D as Reviewer daemon
+    participant D as Reviewer<br/>daemon
     participant M as Model session<br/>(no built-in tools)
-    participant R as Read-only repo server<br/>(OS sandbox)
-    participant C as Deterministic controller
+    participant R as Read-only<br/>repo server<br/>(OS sandbox)
 
-    Agent->>GH: Open PR closing an admitted ticket
-    GH-->>GH: CI starts on hosted or self-hosted runners
+    Agent->>GH: Open PR closing<br/>an admitted ticket
+    GH-->>GH: CI starts on hosted<br/>or self-hosted runners
     loop every poll cycle
-        D->>GH: List open PRs in allowlisted repositories
+        D->>GH: List open PRs in<br/>allowlisted repositories
     end
-    D->>D: Generation = repo + PR + head + base + scope digest
-    D->>GH: Re-validate the linked ticket's current body
-    D->>GH: Fetch exact head from the base repository
-    D->>D: Build worktree and controller artifacts
-    D->>M: Review contract as system prompt
-    M->>R: list_files, search_repo, read_file, read_file_range
-    R-->>M: Bounded, path-checked responses
-    Note over D,GH: About once a minute: has the head or base moved?<br/>If so, stop the session and record it stale.
-    M-->>D: Schema-valid verdict, confidence, findings
+    D->>D: Generation = repo + PR +<br/>head + base + scope digest
+    D->>GH: Re-validate the linked<br/>ticket's current body
+    D->>GH: Fetch exact head from<br/>the base repository
+    D->>D: Build worktree and<br/>controller artifacts
+    D->>M: Review contract<br/>as system prompt
+    M->>R: list_files, search_repo,<br/>read_file, read_file_range
+    R-->>M: Bounded, path-checked<br/>responses
+    Note over D,GH: About once a minute: has the<br/>head or base moved? If so, stop<br/>the session and record it stale.
+    M-->>D: Schema-valid verdict,<br/>confidence, findings
+    create participant C as Deterministic<br/>controller
     D->>C: Decide
     C-->>D: success / failure / error
-    D->>D: Scan the outbound payload for secrets
+    D->>D: Scan the outbound<br/>payload for secrets
     D->>GH: Re-check head and base
-    D->>GH: Post COMMENT review and diagnostic status
-    D->>GH: Re-check head, base, ruleset,<br/>ticket scope and shared heads
-    D->>GH: Post enforcement status at the head SHA
-    D->>GH: Read back: newest status authored by the reviewer App matches
-    GH-->>GH: Ruleset: reviewer context pinned to the reviewer App,<br/>CI green, branch up to date
+    D->>GH: Post COMMENT review<br/>and diagnostic status
+    D->>GH: Re-check head, base,<br/>ruleset, ticket scope<br/>and shared heads
+    D->>GH: Post enforcement status<br/>at the head SHA
+    D->>GH: Read back: newest status<br/>authored by the reviewer<br/>App matches
+    GH-->>GH: Ruleset: reviewer context<br/>pinned to the reviewer App,<br/>CI green, branch up to date
     GH->>GH: Native auto-merge
 ```
 
 Every step shown runs today.
+The diagram follows a review that passes; [when things go wrong](#when-things-go-wrong) covers the other outcomes.
 
 ## Discovering and scheduling work
 
@@ -222,25 +224,37 @@ A run interrupted while publishing is settled if its review already landed, and 
 An `error` or `stale` run is queued again while it is under the attempt ceiling and its generation is current, and an operator re-review can requeue a settled run, or an exhausted one that only ever failed for reasons outside the review.
 
 ```mermaid
-stateDiagram-v2
-    direction TB
-    state "passed, failed or<br/>needs_deeper_review" as settled
-    [*] --> queued
-    queued --> running: selected
-    queued --> stale: moved before start
-    queued --> error: unreadable before start
-    running --> queued: refunded or interrupted
-    running --> stale: head or base moved
-    running --> error: charged failure
-    running --> publishing: controller decided
-    publishing --> publishing: publication retried
-    publishing --> settled: review published
-    publishing --> stale: moved before publication
-    publishing --> error: secret scan hit<br/>or repository gone
-    publishing --> queued: interrupted, not landed
-    error --> queued: retry or re-review
-    stale --> queued: current again
-    settled --> queued: operator re-review
+flowchart TD
+    start(( )) --> queued
+    queued("queued")
+    running("running")
+    publishing("publishing")
+    stale("stale")
+    error("error")
+    settled("passed, failed or<br/>needs_deeper_review")
+    queued -->|selected| running
+    queued -->|"moved<br/>before start"| stale
+    queued -->|"unreadable<br/>before start"| error
+    running -->|"refunded<br/>or interrupted"| queued
+    running -->|"head or<br/>base moved"| stale
+    running -->|"charged<br/>failure"| error
+    running -->|"controller<br/>decided"| publishing
+    publishing -->|"publication<br/>retried"| publishing
+    publishing -->|"review<br/>published"| settled
+    publishing -->|"moved before<br/>publication"| stale
+    publishing -->|"secret scan hit<br/>or repository gone"| error
+    publishing -->|"interrupted,<br/>not landed"| queued
+    error -->|"retry or<br/>re-review"| queued
+    stale -->|"current<br/>again"| queued
+    settled -->|"operator<br/>re-review"| queued
+
+    %% An invisible spacer keeps the diagram clear of the pan and zoom
+    %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
+    error ~~~ spacer["<br/><br/><br/><br/><br/><br/>"]
+    classDef startmark fill:#888,stroke:#888;
+    classDef spacer fill:none,stroke:none;
+    class start startmark;
+    class spacer spacer;
 ```
 
 Every state and transition shown exists in the reviewer today; one box stands for the three decision states, which share their transitions, and there is no final state, because any run can be queued again within its bounds.
