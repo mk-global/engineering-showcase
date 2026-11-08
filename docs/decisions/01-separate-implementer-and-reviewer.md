@@ -1,6 +1,6 @@
 # Decision 1: separate the implementer from the reviewer
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 ## Problem
 
@@ -32,11 +32,11 @@ Remove any one of those and the author has a way to produce a passing result wit
 
 - Installing or changing the reviewer now takes a privileged step at the console, which slows down fixing it.
 - The reviewer still depends on a model server outside its own account. That dependency was accepted by explicit decision.
-- The reviewer trusts its local model endpoint without authenticating it, so a local process that could answer in its place could influence a verdict. That is an open, recorded risk, not a solved one.
+- The reviewer trusts its local model endpoint without authenticating it, so a process on the same machine able to answer in its place could influence a verdict. This is a recorded, accepted residual risk.
 - A change to the reviewer is reviewed by the previous release of the reviewer, which by construction does not contain the change. Its new behavior is proven by tests, not by the live gate.
 
 ## Result
 
 The engineering identity cannot publish a status the branch rules accept as the review, and cannot change the program that produces it.
-It is not a complete separation: the unauthenticated model endpoint above is a residual path to influencing a verdict, and closing it is open work.
+It is not a complete separation: the trusted model endpoint above is a residual path to influencing a verdict, recorded and accepted rather than closed.
 The reviewer's effectiveness is a separate question, answered with measurements on the [evidence page](../evidence/README.md#reviewer-audit-2026-11-01).

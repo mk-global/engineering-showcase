@@ -1,6 +1,6 @@
 # Decision 6: anchor the review gate to the head commit
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 ## Problem
 
@@ -24,7 +24,7 @@ Throughout, GitHub's merge box reported the pull request as mergeable while the 
 The lasting lesson: **the merge box is not acceptance evidence. Only a real merge attempt is.**
 
 Two more facts came out of the same testing.
-GitHub resolves a required context from the test merge commit in preference to the head when both carry it, so the retired context name can never be reused: an old status on a merge commit could override a current one on the head.
+In that testing GitHub was observed to resolve a required context from the test merge commit in preference to the head when both carried it, so the retired context name can never be reused: an old status on a merge commit could override a current one on the head.
 And because a status carries no pull-request association, one shared context let a review of a five-file diff satisfy a different pull request with an unreviewed one-file diff, which then merged.
 
 ## Decision

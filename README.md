@@ -77,6 +77,7 @@ The [security and disclosure page](docs/security.md) explains what this reposito
 | --- | --- |
 | Implemented | Built, tested and running in daily use on the date shown. |
 | Partially implemented | Some of it runs; the page says exactly which part. |
+| Built, not in service | Built and tested, and not yet used by any product. |
 | Experimental | Built and used, without measured evidence that it works well enough to depend on. |
 | Planned | Designed, not built. Never described as a capability. |
 | Superseded | Built or adopted, then deliberately replaced. Kept because the reason matters. |

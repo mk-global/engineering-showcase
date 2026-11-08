@@ -1,6 +1,6 @@
 # Lessons
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 These are failures and surprises the platform ran into, roughly in the order they happened, and what changed because of each.
 Most were found by the platform's own checks or measurements.
@@ -22,7 +22,7 @@ Full story in [decision 6](../decisions/06-anchor-the-gate-to-the-head-commit.md
 *2026-08-14.*
 Two pull requests can share a head commit against different base branches.
 With a single shared status context, a pass on one diff satisfied the other, and a pull request whose actual diff had never been reviewed merged.
-Required review contexts became one per protected branch, and publication now refuses when another open pull request shares the head against a different protected base.
+Required review contexts became one per protected branch, and configuration validation refuses two protected branches that share a context.
 
 ## Two reviews raced on one mirror
 
@@ -44,7 +44,8 @@ Responses are now bounded below the threshold inside the repository server, larg
 ## Long jobs starved twenty-second checks
 
 *2026-09-30.*
-Three long application CI jobs held the only self-hosted runner for 102 minutes while short policy checks queued, one for 68 minutes.
+As recorded at the time, three long application CI jobs held the only self-hosted runner for 102 minutes while short policy checks queued, one for 68 minutes.
+The jobs' own queue and start times for that day show longer waits still: 15 policy checks waited more than an hour, the longest 115 minutes.
 Adding an identical runner would not have helped, because GitHub can hand two long jobs to two runners that both carry every requested label.
 Runners were split into two classes with disjoint labels, and the runner policy now requires governance jobs to declare a timeout of ten minutes or less.
 
@@ -69,7 +70,7 @@ Details on the [isolated agent page](../architecture/isolated-agent.md#a-clean-s
 *2026-10-27.*
 The isolation check proved "no credential" by expecting a remote read to fail.
 When the agent gained its first public repository, the read succeeded, because GitHub serves public repositories anonymously, and the check reported a credential that did not exist.
-The check now judges each probe by Git's own HTTP trace, looking for an `Authorization` header, and adds a dry-run push that GitHub always authenticates.
+The check now judges each probe by Git's own HTTP trace, looking for an `Authorization` header, and its dry-run push probe was changed so that it always reaches GitHub, which always requires authentication for a push.
 A negative test has to be negative for the right reason.
 
 ## Health checks stayed green through an outage
