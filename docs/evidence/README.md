@@ -1,6 +1,6 @@
 # Evidence and status
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 This page links each main claim in the showcase to how it was verified.
 The platform's source and its tickets are private, so visitors cannot follow the evidence to its origin.
@@ -19,29 +19,29 @@ So:
 
 1. Every page starts with a `Last verified: YYYY-MM-DD` line, and CI refuses a page without one.
 2. A page's date moves only when its claims were re-checked against the running system, never when only wording changed.
-3. CI warns when a page is more than 120 days old. A stale page must be re-verified, or its claims must be rewritten in the past tense as a historical snapshot.
+3. CI warns, on the next pull request or push to the default branch, when a page is more than 120 days old; CI has no scheduled run, so an idle repository is not flagged. A stale page must be re-verified, or its claims must be rewritten in the past tense as a historical snapshot.
 4. Measured figures always carry their measurement date and sample, and are never updated in place. A new measurement is added beside the old one.
 5. When a capability changes status, its row here changes in the same pull request as the page that describes it.
 
 ## Evidence index
 
-All rows were last verified on 2026-11-07.
+All rows were re-checked on 2026-11-08 against an independent review of that date, and the rows it found wrong or incomplete were corrected the same day.
 
 | Capability | Status | Verified by | Test or CI evidence | Decision | Observed outcome | Known limitations |
 | --- | --- | --- | --- | --- | --- | --- |
 | Ticket admission recomputed from the current body | Implemented | Test suite; released immutable version | 35 ticket and pull-request policy tests pass; shared parser vectors with the reviewer | [Lifecycle](../workflows/delivery-lifecycle.md#ticket-driven-work) | Labels admit nothing; an edited ticket is re-judged at the next check | Admission checks structure, not whether the work is wise |
-| Isolated, headless engineering agent account | Implemented | Test suite plus live isolation proof recorded on each change's ticket | 74 isolation-check tests and 14 shell-launcher tests pass | [Decision 2](../decisions/02-brokered-short-lived-credentials.md) | Latest live proof from inside the account: 82 probes passed, none failed or unverified (2026-11-05) | A user account is not a VM; covers known credential locations only |
-| One-repository, per-command GitHub tokens | Implemented | Test suite against a fake GitHub that verifies JWTs independently | 67 client tests pass | [Decision 2](../decisions/02-brokered-short-lived-credentials.md) | No command can print a token; tokens revoked after each command | A token is a bearer credential for its short life |
+| Isolated, headless engineering agent account | Implemented | Test suite plus live isolation proof recorded on each change's ticket | 74 isolation-check tests and 14 shell-launcher tests pass | [Decision 2](../decisions/02-brokered-short-lived-credentials.md) | Latest live proof from inside the account: 82 probes passed, none failed or unverified (2026-11-05). That run used an older, agent-owned copy of the isolation checker, not the repository's current one, and covered three of the five allowed checkouts; a re-run with the current checker is pending a step the founder runs | A user account is not a VM; covers known credential locations only |
+| One-repository, per-command GitHub tokens | Implemented | Test suite against a fake GitHub that verifies JWTs independently | 67 client tests pass | [Decision 2](../decisions/02-brokered-short-lived-credentials.md) | The wrapper has no command that prints a token; tokens are normally revoked when the command ends, GitHub's one-hour expiry is the hard bound, and repository scope, not lifetime, is the enforced boundary | A token is a bearer credential until it is revoked or expires |
 | Key broker holding the only App key | Implemented since 2026-10-13 | Test suite on a real Unix socket; activation verified on its ticket | 78 broker tests pass | [Decision 2](../decisions/02-brokered-short-lived-credentials.md) | Agent cannot read the key; refusal when the broker is down | No per-session repository isolation |
 | Independent reviewer: containment, exact-commit identity, deterministic verdict | Implemented | Test suite; startup self-checks; live ruleset reads | 1,128 reviewer tests pass | [Decisions 1, 3, 6](../decisions/README.md) | See the audit below | Never executes code; model judgment fallible; not OS network-confined |
-| Reviewer as a dedicated system service from sealed releases | Implemented since 2026-10-29 | Live service configuration read on 2026-11-07: the active release was built from the main commit | Release install runs the full suite in place | [Decision 1](../decisions/01-separate-implementer-and-reviewer.md) | Founder sessions cannot rewrite the running gate | Trusts an unauthenticated local model endpoint (open risk) |
-| Pinned, strict required checks with no bypass | Implemented | Live read of effective branch rules on governed repositories | Not applicable | [Decision 6](../decisions/06-anchor-the-gate-to-the-head-commit.md) | A foreign `success` under the reviewer's context does not satisfy the rule (verified live) | Relies on repository settings staying correct; the reviewer re-reads them before publishing |
-| Auto-merge with no human approval on the platform repository | Implemented since 2026-11-01 | Live rule-suite evaluation of the first merge after the change | Not applicable | [Decision 4](../decisions/04-auto-merge-without-human-approval.md) | Merged with no approval event and only the main ruleset evaluated | Reviewer becomes the only independent semantic check |
-| Runner classes with disjoint selectors | Implemented | Runner-policy test suite; organization audit | 71 runner-policy tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#ci-runners-and-workload-separation) | By construction, a policy check cannot be handed to an application runner | Persistent runners are not a boundary against hostile repository code |
-| Versioned, SHA-pinned governance components | Implemented | Release tags; consumers' pins checked by the product standard | 62 product-standard tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#shared-governance-components) | Central changes reach a repository only when it moves its pin | Pins must be moved deliberately, so fixes propagate slowly |
-| Organization onboarding and audit | Implemented | Test suite against a fake GitHub; operator-run live audit | 52 onboarding tests pass | [Decision 5](../decisions/05-public-and-private-ci-security-models.md) | Audit compares declared and live state in both directions | Needs organization-admin credentials, so it runs from an operator session, not CI |
+| Reviewer as a dedicated system service from sealed releases | Implemented since 2026-10-29 | Live service configuration read on 2026-11-07: the active release was built from the main commit | Release install runs the full suite in place | [Decision 1](../decisions/01-separate-implementer-and-reviewer.md) | Founder sessions cannot rewrite the running gate | Trusts an unauthenticated local model endpoint; a recorded, accepted residual risk |
+| Pinned, strict required checks with no bypass | Implemented on the platform, product-class and public repositories; three other governed repositories are not yet uniform, as the [lifecycle page](../workflows/delivery-lifecycle.md#required-checks-exact-commits) notes | Live read of effective branch rules on every organization repository, 2026-11-08 | Not applicable | [Decision 6](../decisions/06-anchor-the-gate-to-the-head-commit.md) | A foreign `success` under the reviewer's context does not satisfy the rule (verified live) | Relies on repository settings staying correct; the reviewer re-reads them before publishing |
+| Auto-merge with no human approval on the platform repository | Implemented since 2026-11-01 | Live rule-suite evaluation of the first merge after the change | Not applicable | [Decision 4](../decisions/04-auto-merge-without-human-approval.md) | The first merge after the change, a direct merge by the engineering App, had no approval event and only the main ruleset evaluated | Reviewer becomes the only independent semantic check |
+| Runner classes with disjoint selectors | Implemented | Runner-policy test suite; organization audit | 71 runner-policy tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#ci-runners-and-workload-separation) | In the current release, a policy check cannot be handed to an application runner; repositories still pinned to an older release are the exception until they move their pin | Persistent runners are not a boundary against hostile repository code |
+| Versioned governance components, SHA-pinned by governed private repositories | Implemented | Release tags, by policy never moved, with no ruleset enforcing that; the product standard checks that each consumer pin is a full commit SHA, and verify and audit fail a repository whose default branch does not carry the released versions | 62 product-standard tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#shared-governance-components) | Central changes reach a repository only when it moves its pin | Pins must be moved deliberately, so fixes propagate slowly; public repositories consume no components |
+| Organization onboarding and audit | Implemented | Test suite against a fake GitHub; operator-run live audit | 52 onboarding tests pass | [Decision 5](../decisions/05-public-and-private-ci-security-models.md) | Audit compares declared and live state in both directions, and fails a repository whose default branch does not carry the released governance versions | Needs organization-admin credentials, so it runs from an operator session, not CI |
 | Public-repository category | Implemented | Organization audit; live settings reads | Covered by the onboarding tests | [Decision 5](../decisions/05-public-and-private-ci-security-models.md) | Public repositories cannot reach private runners | Some public-repository protections are time-limited and must be renewed |
-| Staging adapter: exact-commit deploy and backend identity check | Partially implemented | Test suite against a fake hosting API and a fake served site | 39 adapter tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#staging) | Not yet the path any product deploys through | Reusable workflow not released; provider behaviors unverified until a live run |
+| Staging adapter: exact-commit deploy and backend identity check | Built, not in service | Test suite against a fake hosting API and a fake served site | 39 adapter tests pass | [Lifecycle](../workflows/delivery-lifecycle.md#staging) | Not yet the path any product deploys through | Reusable workflow not released; provider behaviors unverified until a live run |
 | Overnight repository auditor | Experimental | Built with its own tests; not re-run for this page | Not summarized here | Not applicable | Not evaluated here | No measurement of its findings' quality |
 | Founder-bound production promotion, release candidates, rollback drills | Planned | Not applicable | None | [Lifecycle](../workflows/delivery-lifecycle.md#production-promotion-and-rollback) | Not built | |
 | Isolated execution worker for container jobs | Planned | Not applicable | None | [Roadmap](../roadmap.md) | Not built | |
@@ -51,6 +51,7 @@ All rows were last verified on 2026-11-07.
 
 Test counts are from runs of each suite at the platform's main commit on 2026-11-07, before this repository's own onboarding change.
 Every suite listed passed; none was skipped.
+An independent review reproduced every count on 2026-11-08.
 
 ## Reviewer audit, 2026-11-01
 
@@ -61,7 +62,8 @@ The population for effectiveness was every blocking or inconclusive verdict from
 For each verdict, one auditor read the code at the reviewed head, the later commits, the discussion and CI.
 An independent skeptic then tried to refute each classification and agreed with all 18 findings and all 3 inconclusive assessments.
 A later change or a later pass was not accepted as proof of validity.
-Performance was measured on the 30 most recently merged pull requests into branches where the reviewer is required, spanning 2026-10-30 to 2026-11-01.
+Performance was measured on the 30 most recently merged pull requests into branches where the reviewer is required, as of 2026-11-01, spanning 2026-10-30 to 2026-11-01.
+Each median is the mean of the 15th and 16th of the 30 sorted values, and each p95 is linearly interpolated between the two closest ranks.
 
 **Effectiveness.**
 
@@ -83,8 +85,10 @@ Every false positive was a confident misreading of code the reviewer could not r
 | Measure | Median | p95 |
 | --- | --- | --- |
 | Push to reviewer success | 18.5 min | about 97 min |
-| Of which queueing | 4.5 min | 89.5 min |
+| Of which queueing | about 3.4 min | about 92 min |
 | Of which the review run | 7.7 min | 37.5 min |
+
+An earlier version of this page published queue figures (4.5 min and 89.5 min) that had been computed on 31 values; the figures above are the same measurement recomputed on the table's own 30 rows, not a new measurement.
 
 Over three days, 36% of the reviewer's busy time went to advisory reviews of a branch where it was not required, and that was the largest single cause of waiting.
 The scheduler has since been changed to select required reviews first.
@@ -96,8 +100,9 @@ Of the rest, nine came from one containment-verification outage, three from a mo
 
 **Limits of this evidence.**
 
-- The performance sample covers about two and a half days after the service cutover; a 95th percentile at n = 30 rests on the two largest values.
+- The performance sample covers about two and a half days after the service cutover; a 95th percentile at n = 30 is interpolated between the second- and third-largest values, so one slow pull request moves it a long way.
 - Effectiveness rests on 18 findings and 16 verdicts and should be read as directional.
+- For the two material findings, CI results were not observable, so "not caught by tests or CI" was inferred from reading the tests at the reviewed head, which had mocked the boundaries involved.
 - False negatives were counted only as defects that surfaced after merge within days. Escapes not yet found are not counted.
 - Push times were approximated by the earliest check on each head.
 

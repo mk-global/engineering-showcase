@@ -1,6 +1,6 @@
 # Decision 3: deterministic controls around model judgment
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 ## Problem
 
@@ -33,7 +33,7 @@ The model proposes; deterministic code decides, and anything the controller cann
 - whether the change is still the one reviewed is checked against GitHub immediately before publishing.
 
 The controller can lower a model's blocking finding in exactly one case: when a deterministic proof shows the pull request is an exact rollback, the finding is in a restored file, and the model tagged it as restored baseline.
-Even then, the finding is lowered and never removed.
+Even then, the finding is lowered to P3 and never removed; if that leaves no blocking finding, the controller changes the model's `CHANGES_REQUIRED` verdict to `PASS` and says so in the published summary.
 
 ## Trade-off
 
@@ -42,5 +42,5 @@ Even then, the finding is lowered and never removed.
 
 ## Result
 
-No pull request has merged without a successful authoritative review in the audited period, and the reviewer's failures show up as errors or blocks rather than as silent passes.
+No pull request has merged into a branch where the reviewer is required without a successful authoritative review in the audited period, and the reviewer's failures show up as errors or blocks rather than as silent passes.
 Its accuracy is a separate, measured problem, with false-positive reduction named as the next investment if the rate does not fall.

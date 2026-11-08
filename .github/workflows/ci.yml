@@ -1,6 +1,7 @@
 # Documentation CI for a public repository.
 # Runs only on GitHub-hosted runners, with a read-only token and no secrets.
-# Every action is pinned to a full commit SHA; tools are pinned by version and checksum.
+# Every action is pinned to a full commit SHA. npm tools are pinned by version and lockfile
+# integrity, gitleaks by version and SHA-256, and the headless browser by version only.
 name: ci
 
 on:

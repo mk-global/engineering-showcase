@@ -1,13 +1,13 @@
 # Roadmap and current limitations
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 Everything on this page is **Planned** unless it says otherwise.
 None of it is a capability today.
 
 ## Limitations that matter most
 
-- **Production delivery is not automated, and should not be yet.** There is no release-candidate record, no founder approval bound to an exact candidate, and no rehearsed rollback. Nothing deploys to production on merge.
+- **Production delivery is not automated, and should not be yet.** There is no release-candidate record, no founder approval bound to an exact candidate, and no rehearsed rollback. Products under the platform standard do not deploy to production on merge; one older product deploys from its default branch under a recorded founder exception.
 - **The reviewer never runs the code it reviews.** Its false positives and its blind spots both come from that.
 - **The broker does not separate one agent session from another.** Any engineering session can request a token for any repository the agent may work on.
 - **Self-hosted CI runners persist between jobs.** They are not a boundary against hostile repository code, which is why public repositories never use them.
@@ -21,7 +21,7 @@ None of it is a capability today.
 4. **An isolated execution worker** that owns container work, reached by the agent through a job-level interface that accepts declared operations against a repository revision. Never a Docker socket, daemon API or remote shell for the agent.
 5. **Disposable CI execution** for code a repository supplies: a clean one-job environment that is destroyed after use, on the existing hardware, before treating self-hosted CI as hardened.
 6. **Per-session repository isolation** for the broker, which needs a session identity the broker can verify independently of the caller.
-7. **Retire the last long-lived credential** still used by older automation paths.
+7. **Retire the remaining long-lived credentials** left from older automation paths.
 8. **Reviewer, after its feature freeze is reassessed on 2026-12-01.** If false positives stay near two a week, the next investment is reducing them. Consuming CI results as review evidence and scaling to very large diffs come after that.
 9. **Read-only production diagnostics** through provider-scoped profiles, each separately authorized and verified before use.
 

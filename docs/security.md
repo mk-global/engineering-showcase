@@ -1,6 +1,6 @@
 # Security philosophy and disclosure boundaries
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 ## Security philosophy
 
@@ -8,6 +8,7 @@ A handful of principles show up on almost every page of this showcase, so here t
 
 **Authority is narrow, short-lived and held by the right identity.**
 The coding agent, the reviewer, the credential broker, the CI runners and the founder are separate identities, each with a written list of what it may never do, enforced by the operating system, GitHub or the broker rather than by convention.
+Third-party GitHub Apps installed on some repositories sit outside this identity model; their access is set by their own installations, not by the broker.
 
 **Failure is refusal.**
 When a credential, a check or a dependency is unavailable, the system stops.
@@ -18,14 +19,15 @@ Model output is untrusted data, whether it is a code review or text inside a pul
 Every decision that gates a merge or grants access is made by code whose behavior can be read and tested.
 
 **Evidence is anchored to exact commits.**
-A review, a test result or a deployment is about one immutable commit, and the platform checks that the thing merging or deploying is still that commit.
+A review or a test result is about one immutable commit, and the platform checks that the thing merging is still that commit.
+The staging design applies the same rule to deployment, and is not in service yet.
 
 **A habit is not a control.**
 If something matters, GitHub, the operating system or a test enforces it.
 Several of the [decisions](decisions/README.md) started as an audit that found a protection which existed only because someone always did the right thing.
 
 **Limits are stated.**
-Every component page ends with what the component does not protect against.
+Every component page states what the component does not protect against.
 A security claim without its boundary is not a claim I'm willing to make.
 
 ## What this repository publishes
@@ -74,7 +76,7 @@ This is a public, documentation-first repository, and it is governed under the p
 - workflows cannot approve pull requests, and workflow runs from outside contributors need approval;
 - pull-request creation is restricted to collaborators, and interactions are limited to collaborators, so strangers cannot fill the shared review queue;
 - secret scanning and push protection are enabled;
-- the engineering App is not installed here. Changes are made from the founder's session and reviewed by the independent reviewer like any other.
+- the engineering App is not authorized for this repository, which is not on the App's declared repository list; changes are made from the founder's session and reviewed by the independent reviewer like any other.
 
 ## Reporting a vulnerability
 

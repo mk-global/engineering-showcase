@@ -1,6 +1,6 @@
 # Contributing and maintenance
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 This is a personal portfolio of a private system, so pull requests are limited to collaborators.
 If you have a question or spot an error, the profile links in the [README](README.md#about-me) are the best way to reach me, and anything security-related belongs in a [private report](SECURITY.md).
@@ -15,13 +15,13 @@ Every change goes through the same governed path as the platform it describes:
 2. **Branch and pull request.** One coherent change per pull request, with `Closes #<n>` naming the ticket in the same repository.
 3. **CI.** The `validate` check runs on a GitHub-hosted runner: Markdown lint, internal links and anchors, rendering of every Mermaid diagram, the required page structure and `Last verified` lines, the example tests, style rules, generic disclosure patterns and a secret scan of the branch's history.
 4. **Independent review.** The local AI reviewer reviews the exact head against the ticket's scope. Its status is required, and only its own identity can satisfy it.
-5. **Merge.** GitHub's native auto-merge merges once both required checks are green at the exact head and the branch is up to date. There is no manual approval step.
+5. **Merge.** The pull request merges once both required checks are green at the exact head and the branch is up to date, through GitHub's native auto-merge or a direct merge; the ruleset applies either way, and there is no manual approval step.
 
 ## Accuracy check
 
 Before a change is opened, every claim it adds or changes is checked against the running system, not against documentation, memo or memory:
 
-- a capability's status must match the [status labels](README.md#status-labels), and anything not built is labeled Planned;
+- a capability's status must match the [status labels](README.md#status-labels): anything built and tested but not in service is labeled Built, not in service, and anything not built is labeled Planned;
 - a number must come from a measurement with a date, sample and method, and is added beside older measurements rather than replacing them;
 - the [evidence index](docs/evidence/README.md) changes in the same pull request as the page whose claim it supports;
 - a page's `Last verified` date moves only when its claims were re-checked.

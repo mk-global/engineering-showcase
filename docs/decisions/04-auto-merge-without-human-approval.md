@@ -1,6 +1,6 @@
 # Decision 4: auto-merge without human approval
 
-Last verified: 2026-11-07
+Last verified: 2026-11-08
 
 ## Problem
 
@@ -48,6 +48,7 @@ The deleted ruleset's full definition was recorded on its ticket so it can be re
 
 ## Result
 
-The first formerly reserved pull request after the change merged with no approval event, through the engineering App, with GitHub's rule evaluation showing only the main ruleset applied.
+The first formerly reserved pull request after the change merged with no approval event, by a direct merge from the engineering App, with GitHub's rule evaluation showing only the main ruleset applied.
+Native auto-merge was enabled on the repository later the same day, and the first auto-merge followed.
 The same day, the reviewer audit measured what the platform now depended on, and its findings drove a month-long reviewer feature freeze and a scheduling fix that runs required reviews before advisory ones.
 That sequence, removing a human gate and immediately measuring the automated one that replaced it, is the part of this decision I'd repeat.

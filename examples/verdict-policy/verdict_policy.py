@@ -64,8 +64,11 @@ def validate(result: Any) -> Mapping[str, Any]:
 def decide(result: Any, minimum_confidence: float = DEFAULT_MINIMUM_CONFIDENCE) -> Decision:
     """Decide the required status from a model's review result.
 
-    The order matters: a malformed result is an error, never a pass, and any
-    blocking finding fails the gate whatever the model's own verdict says.
+    The order matters: a result that fails validate() is an error, never a
+    pass, and any blocking finding fails the gate whatever the model's own
+    verdict says. validate() checks only the fields this decision uses: it does
+    not reject a result that lacks other contract fields or carries extra ones,
+    so a real controller validates the whole result against its schema first.
     """
     try:
         result = validate(result)
