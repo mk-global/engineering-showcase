@@ -21,7 +21,7 @@ So the design question became how to let the agent do as much engineering as pos
 
 **Automate the repeatable work.**
 Implementation, opening pull requests, running checks, reviewing and merging are mechanical once their inputs are decided.
-The agent implements and opens pull requests within sessions the founder starts; checks, review and the merge decision then need no human.
+The agent implements and opens pull requests within sessions the founder starts; checks, review and the merge decision then need no human, except in one repository where a recorded founder exception requires an approving review.
 Staging deployment is designed to join that list, and is not in service yet.
 
 **Keep authority boundaries explicit.**

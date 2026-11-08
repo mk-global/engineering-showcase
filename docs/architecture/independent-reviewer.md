@@ -192,7 +192,7 @@ The reviewer never approves and never merges.
 Three GitHub facts shape this, and each was learned by testing against real merges:
 
 - **A commit status is not access-controlled per context.** Anyone with status-write permission can post `success` under any context name. A required check that is not pinned to a source matches on name alone, so the required context is pinned to the reviewer App's integration ID, here in a repository ruleset. A live test recorded with the code found that a `success` posted by another identity under the exact context, over the reviewer's `failure`, did not satisfy the requirement.
-- **A status has no pull-request association.** Two pull requests can share a head commit against different bases, and a single shared context would let a review of one diff satisfy the other. This was demonstrated: a pass on a five-file diff satisfied a different pull request whose one-file diff had never been reviewed, and it merged. Hence one context per protected branch, which configuration validation enforces. On a branch that requires tickets, the reviewer also publishes no gate when another open pull request shares the head under a different or unresolvable ticket scope.
+- **A status has no pull-request association.** Two pull requests can share a head commit against different bases, and a single shared context would let a review of one diff satisfy the other. This was demonstrated: a pass on a five-file diff satisfied a different pull request whose one-file diff had never been reviewed, and it merged. Hence one context per protected branch, which configuration validation enforces. On a branch that requires tickets, the reviewer also publishes no gate when another open pull request against the same protected branch shares the head under a different or unresolvable ticket scope.
 - **The status says nothing about the base it was reviewed against.** Strict "branch must be up to date" freshness is what binds the two, so it is part of the security model. Before every authoritative publication the reviewer reads the ruleset back from GitHub and publishes no pass unless the context is required, pinned to it, and strict.
 
 After publishing, the reviewer reads the commit's statuses back and checks that the newest one authored by its own App matches what it wrote.
@@ -234,7 +234,7 @@ stateDiagram-v2
     running --> error: charged failure
     running --> publishing: controller decided
     publishing --> publishing: publication retried
-    publishing --> settled: decision stored
+    publishing --> settled: review published
     publishing --> stale: moved before publication
     publishing --> error: secret scan hit<br/>or repository gone
     publishing --> queued: interrupted, not landed
@@ -250,7 +250,7 @@ Every state and transition shown exists in the reviewer today; one box stands fo
 The reviewer gates merges in several repositories, so an accidental or malicious change to the running reviewer is a change to every gate at once.
 
 - **Sealed releases.** The service never runs from a development checkout. A release is one merged commit, extracted from Git objects, built and tested in place, recorded with a hash of every installed source file and a digest of the build, and sealed read-only. Installed dependencies are not hashed. Activation runs the release's self-check, which refuses if any recorded file or the build differs; the daemon does not repeat it at each start.
-- **A dedicated service account.** Since 2026-10-29 the reviewer runs as a hidden, non-admin system account from root-owned copies of the release, and since 2026-10-30 with pinned copies of Node.js, checked against its published checksums and its publisher's signing team, and of the Claude CLI, checked for a valid code signature. The founder's own processes, including AI agent sessions, can no longer rewrite the running gate without an administrator prompt.
+- **A dedicated service account.** Since 2026-10-29 the reviewer runs as a hidden, non-admin system account from root-owned copies of the release, and since 2026-10-30 with pinned copies of Node.js, checked against its published checksums and its publisher's signing team, and of the Claude CLI, checked for a valid code signature. The founder's own processes, including AI agent sessions, can no longer rewrite the running gate without an administrator prompt. The local model server it calls is not part of that account, as [decision 1](../decisions/01-separate-implementer-and-reviewer.md) records.
 - **Exactly one publisher.** A starting daemon refuses while any other reviewer process runs on the host, and the two installation forms refuse each other.
 - **Changing the reviewer is reviewed by the deployed reviewer.** A pull request that changes the reviewer is reviewed by the release built from `main`, which does not contain the change. Merging deploys nothing; a separate, privileged activation does.
 

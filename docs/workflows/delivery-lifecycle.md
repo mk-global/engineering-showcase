@@ -104,11 +104,11 @@ The platform therefore releases its governance as versioned components:
 | Component | What it enforces |
 | --- | --- |
 | Ticket and pull-request policy | The eight-section ticket contract, the pull-request contract, and that a pull request closes an open, admitted ticket |
-| Runner policy | Every CI job runs on exactly one approved runner class, chosen by an exact selector, with governance jobs bounded to ten minutes in the current release; repositories still pinned to an older release run their policy jobs without that bound until they move their pin |
+| Runner policy | Every CI job runs on exactly one approved runner class, chosen by an exact selector, with governance jobs bounded to ten minutes in the current release; repositories still pinned to an older release run their policy jobs on the application class and without that bound until they move their pin |
 | Product repository standard | A product repository declares and provides the documents and governance roles the standard requires |
 
 Each release is a tag that, by policy, is never moved; a correction is a new version, never a re-tag.
-No ruleset enforces that policy, so the guarantee comes from the consumers: governed private repositories pin a full 40-character commit SHA, with the tag in a comment for humans, so a moved tag could not change what they run.
+No ruleset enforces that policy, so the guarantee comes from the consumers: governed private repositories pin a full 40-character commit SHA, with the tag in a comment for humans, so a moved tag could not change what they run without a reviewed pull request that re-pins them.
 Public repositories do not consume these components; they follow the separate model described [below](#public-and-private-repositories).
 A branch reference is never used, because a branch means a central edit reaches every repository the moment it merges, with nobody choosing it.
 
@@ -124,11 +124,11 @@ It can onboard one repository, verify one, or audit the whole organization again
 Verify and audit fail a repository whose default branch does not carry the released governance versions.
 It is idempotent: a conforming repository produces zero changes, and two runs against the same live state compute the same plan.
 It fails closed, reporting a blocked step with the permission it needed rather than skipping it.
-It adds a repository to the private runner group only when the inventory declares it, and refuses any change that would widen the group's visibility or admit public repositories.
+It adds a repository to the private runner group only when the inventory declares it, or while it creates or adopts that repository as a governed one, and refuses any change that would widen the group's visibility or admit public repositories.
 
 ## CI runners and workload separation
 
-Private governed repositories run CI on self-hosted runners on the same machine, split into two classes that differ by one label:
+Private governed repositories, the private repositories the onboarding inventory declares, run CI on self-hosted runners on the same machine, split into two classes that differ by one label:
 
 | | Compute class | Governance class |
 | --- | --- | --- |

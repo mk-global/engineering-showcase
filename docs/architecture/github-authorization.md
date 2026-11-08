@@ -128,8 +128,8 @@ That is the design working, not an outage of some other control.
 | | Key in the agent's account | Key in the broker |
 | --- | --- | --- |
 | Who can read the App private key | the agent | only the broker (and root) |
-| Agent signs its own App JWT | possible | impossible |
-| Agent mints a token outside the wrapper's rules, such as several repositories at once or a broader permission | possible | impossible |
+| Agent signs its own App JWT | possible | impossible without a privileged installation by the founder |
+| Agent mints a token outside the wrapper's rules, such as several repositories at once or a broader permission | possible | impossible without a privileged installation by the founder |
 | Agent gets a one-repository token for any repository it is authorized for | possible | **still possible** |
 | A token, once handed over, is a bearer credential until revoked | yes | yes |
 
