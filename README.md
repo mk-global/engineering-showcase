@@ -28,7 +28,7 @@ Every capability carries a [status label](#status-labels), and only what is mark
   The coding agent runs as a separate, non-admin macOS account that cannot read the founder's credentials and has no GitHub identity of its own.
   A negative test run from inside the account checks this.
 - **Implemented: [brokered GitHub authorization](docs/architecture/github-authorization.md).**
-  For each command, the agent gets a GitHub App token for exactly one repository and one permission profile, from a broker that holds the only key, and every failure is a refusal.
+  For each command, the agent gets a GitHub App token for exactly one repository and one permission profile, from a broker that holds the only key, and any failure to obtain a token is a refusal.
   The token is normally revoked when the command ends; GitHub's one-hour expiry is the hard bound.
 - **Implemented: [independent local AI reviewer](docs/architecture/independent-reviewer.md).**
   A daemon under its own identity reviews pull requests in the repositories it is authorized for, at their exact head and base, on a local model, with no shell and no way to run pull-request code.
@@ -36,9 +36,9 @@ Every capability carries a [status label](#status-labels), and only what is mark
   Its independence has one recorded, accepted residual dependency, on its local model server, described in its [limitations](docs/architecture/independent-reviewer.md#limitations).
 - **Implemented: [governance as versioned components](docs/workflows/delivery-lifecycle.md#shared-governance-components).**
   Ticket and pull-request policy, runner policy and a product repository standard are released as tagged versions, which by policy are never moved, and the governed private repositories pin them by full commit SHA; public repositories follow a separate model.
-  An onboarding operation audits the organization against its declared state and fails a repository whose default branch does not carry the released versions.
+  An onboarding operation audits the organization against its declared state and, since 2026-11-08, fails a repository whose default branch does not carry the released versions.
 - **Built, not in service: [staging delivery](docs/workflows/delivery-lifecycle.md#staging).**
-  A staging adapter that deploys an exact commit and proves the served build and its backend is built and tested.
+  A staging adapter that deploys an exact commit, waits until it is served, and checks that the served build talks to the staging backend is built and tested.
   No product deploys through it yet.
 - **Planned: [production promotion](docs/workflows/delivery-lifecycle.md#production-promotion-and-rollback).**
   Artifact promotion, founder approval bound to one release candidate, and rehearsed rollback are designed and not built.
@@ -76,14 +76,25 @@ The [operating model](docs/operating-model.md) walks through each step and who h
 
 ## What this system does not do yet
 
-- **It does not deliver to production.** Nothing promotes a release to production under this model. Products under the platform standard do not deploy to production on merge; one older product deploys from its default branch under a recorded founder exception.
-- **It does not deploy staging.** The staging adapter is built and tested, but the workflow products would call is not released, so no product deploys through it.
-- **The reviewer does not run the code it reviews.** Build, test and runtime evidence do not inform its verdict, and half of its blocking findings in the audited month were wrong.
-- **The broker does not separate one agent session from another.** Any engineering session can request a token for any repository the agent may work on.
-- **Self-hosted CI runners are not a boundary against hostile code.** They persist between jobs, which is why public repositories never use them.
-- **One machine runs the agent, the reviewer, the model and the private runners.** Review stops when it sleeps.
-- **The agent cannot do container-based work.** The isolated execution worker that would allow it is planned.
-- **Not every governed repository has the standard branch rules yet,** and the latest live isolation proof was run with an older copy of the checker; both are recorded on the [evidence page](docs/evidence/README.md).
+- **It does not deliver to production.**
+  Nothing promotes a release to production under this model.
+  Products under the platform standard do not deploy to production on merge; one older product deploys from its default branch under a recorded founder exception.
+- **It does not deploy staging.**
+  The staging adapter is built and tested, but the workflow products would call is not released, so no product deploys through it.
+- **The reviewer does not run the code it reviews.**
+  Build, test and runtime evidence do not inform its verdict, and half of its blocking findings in the audited month were wrong.
+- **The broker does not separate one agent session from another.**
+  Any engineering session can request a token for any repository the agent may work on.
+- **Self-hosted CI runners are not a boundary against hostile code.**
+  They persist between jobs, which is why public repositories never use them.
+- **One machine runs the agent, the reviewer, the model and the private runners.**
+  Review stops when it sleeps.
+- **The agent cannot do container-based work.**
+  The isolated execution worker that would allow it is planned.
+- **Not every governed repository has the standard branch rules yet.**
+  Which rules differ is recorded on the [evidence page](docs/evidence/README.md).
+- **The latest live isolation proof used an older copy of the checker.**
+  The [evidence page](docs/evidence/README.md) records it, and a re-run with the current checker is pending a step the founder runs.
 
 The [roadmap](docs/roadmap.md) orders the planned work.
 
@@ -95,7 +106,7 @@ For the two material findings, that was inferred by reading the tests at the rev
 
 Across the 30 most recently merged pull requests in that audit, the final review of a pull request took a median of 7.7 minutes to run.
 The long waits came from queueing behind other reviews: a median of about 3.4 minutes and about 92 minutes at the 95th percentile.
-An earlier version of this page gave queue figures computed on 31 values; the [evidence page](docs/evidence/README.md#reviewer-audit-2026-11-01) explains the correction, the method and the limits.
+The [evidence page](docs/evidence/README.md#reviewer-audit-2026-11-01) gives the method and the limits.
 
 I have not measured deployment frequency, engineering effort saved or the reviewer's recall, and the showcase does not claim them.
 
