@@ -88,6 +88,7 @@ sequenceDiagram
 ```
 
 Every step shown runs today.
+The diagram follows a review that passes; [when things go wrong](#when-things-go-wrong) covers the other outcomes.
 
 ## Discovering and scheduling work
 
