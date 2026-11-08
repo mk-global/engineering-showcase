@@ -42,6 +42,15 @@ CI's disclosure check catches generic patterns only, such as absolute home paths
 It is a backstop, not the review.
 AI review is not evidence that a disclosure is safe.
 
+## Diagrams
+
+- Diagrams are drawn top-down, so they stay legible in GitHub's column and on a phone.
+- They share one status convention: solid boxes and arrows run today, a thick border marks something built but not in service, a dashed italic box is planned, and a dotted arrow leads to work that does not run yet.
+  Each diagram's caption states the parts of that convention it uses.
+- GitHub draws pan and zoom controls over the bottom-right corner of every rendered diagram, and expand and copy buttons over the top-right corner.
+  A flowchart ends with an invisible spacer node (`classDef spacer fill:none,stroke:none;`, joined by an invisible `~~~` link) so its last row stays clear of them, with a comment in the source saying why.
+- After changing a diagram, check it as GitHub renders it at desktop, tablet and phone widths, not only in a local render: the controls exist only on GitHub.
+
 ## Writing style
 
 Sentence-case headings, one sentence per line in the Markdown source, plain words, no em dashes, no curly quotes.

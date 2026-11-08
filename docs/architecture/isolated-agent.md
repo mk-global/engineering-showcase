@@ -101,11 +101,18 @@ flowchart TD
     claude -. "denied: separate account" .-x rkey
     claude -. "denied: socket unreachable" .-x docker
     claude -. "denied: key unreadable" .-x key
+
+    %% An invisible spacer keeps the diagram clear of the pan and zoom
+    %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
+    gh ~~~ spacer["<br/><br/><br/><br/>"]
+    classDef spacer fill:none,stroke:none;
+    class spacer spacer;
 ```
 
 Solid arrows are paths that run today; dotted arrows ending in a cross are access the boundary denies, each one proven by the isolation check.
 
 Each subgraph is a separate macOS account.
+The diagram draws only the accounts whose credentials matter to GitHub authority; the isolation check also proves that every other account's home, including the CI runners', is closed to the agent.
 The only arrow out of the agent account toward GitHub authority goes through the broker daemon's socket, and the broker decides who is asking from the kernel, not from anything the agent sends.
 The daemon and the key are drawn apart because the agent may talk to one and is denied the other: the key is read only by the broker's account.
 

@@ -89,6 +89,12 @@ flowchart TD
     mintfn -->|"6. verified grant"| cli
     cli -->|"7. verify again,<br/>run one command"| child --> repo
     cli -->|"8. revoke when<br/>the command ends"| app
+
+    %% An invisible spacer keeps the diagram clear of the pan and zoom
+    %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
+    github ~~~ spacer["<br/><br/><br/><br/>"]
+    classDef spacer fill:none,stroke:none;
+    class spacer spacer;
 ```
 
 Every box and arrow shown runs today.
