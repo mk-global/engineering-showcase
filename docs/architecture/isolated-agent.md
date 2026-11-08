@@ -101,6 +101,12 @@ flowchart TD
     claude -. "denied: separate account" .-x rkey
     claude -. "denied: socket unreachable" .-x docker
     claude -. "denied: key unreadable" .-x key
+
+    %% An invisible spacer keeps the diagram clear of the pan and zoom
+    %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
+    gh ~~~ spacer["<br/><br/><br/><br/>"]
+    classDef spacer fill:none,stroke:none;
+    class spacer spacer;
 ```
 
 Solid arrows are paths that run today; dotted arrows ending in a cross are access the boundary denies, each one proven by the isolation check.
