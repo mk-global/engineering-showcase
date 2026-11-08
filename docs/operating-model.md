@@ -104,17 +104,17 @@ Solid boxes and arrows run today; the thick border marks staging, which is built
 
 ## Who holds authority at each step
 
-| Step | Acts as | May | May never | Status |
+| Step | Status | Acts as | May | May never |
 | --- | --- | --- | --- | --- |
-| Decide the work | Founder | Write tickets, record decisions, change governance | Be bypassed by an agent's own judgment about scope | Implemented |
-| Admit the ticket | Deterministic validator, recomputed by every verifier | Accept a ticket whose current body has the eight required sections | Trust a label, which anyone with issue write access can apply | Implemented |
-| Implement | Engineering agent account | Edit code, run local tools, ask the broker for a token | Read founder credentials, reach a container engine, hold a GitHub login | Implemented |
-| Talk to GitHub | Engineering GitHub App, through the broker | Contents, pull requests and issues for one repository per token | Workflows, Actions, administration, deployments, secrets, organization settings | Implemented |
-| Validate | CI on runners chosen by repository trust | Run checks on the pull request | Run public pull-request code on a private self-hosted runner | Implemented |
-| Review | Reviewer service under its own App and macOS account | Read the exact change, publish a status and a comment | Execute pull-request code, approve, merge, or be produced by the engineering identity | Implemented |
-| Merge | GitHub, through the repository ruleset | Merge when every required context is green at the exact head and the branch is current, on the platform, product-class and public repositories | Accept a status from any identity other than the one pinned for that context | Implemented |
-| Deploy staging | Shared staging adapter with a staging-only credential in a branch-restricted environment; the credential model is designed, and no such credential is provisioned yet | Deploy one product's staging project | Reach production, which the provider refuses for a project-scoped token; that refusal is to be demonstrated before first use | Built, not in service |
-| Promote to production | Product and environment specific deployment identity | Promote one approved, immutable candidate | Be reached from the agent account or an untrusted build | Planned |
+| Decide the work | Implemented | Founder | Write tickets, record decisions, change governance | Be bypassed by an agent's own judgment about scope |
+| Admit the ticket | Implemented | Deterministic validator, recomputed by every verifier | Accept a ticket whose current body has the eight required sections | Trust a label, which anyone with issue write access can apply |
+| Implement | Implemented | Engineering agent account | Edit code, run local tools, ask the broker for a token | Read founder credentials, reach a container engine, hold a GitHub login |
+| Talk to GitHub | Implemented | Engineering GitHub App, through the broker | Contents, pull requests and issues for one repository per token | Workflows, Actions, administration, deployments, secrets, organization settings |
+| Validate | Implemented | CI on runners chosen by repository trust | Run checks on the pull request | Run public pull-request code on a private self-hosted runner |
+| Review | Implemented | Reviewer service under its own App and macOS account | Read the exact change, publish a status and a comment | Execute pull-request code, approve, merge, or be produced by the engineering identity |
+| Merge | Implemented | GitHub, through the repository ruleset | Merge when every required context is green at the exact head and the branch is current, on the platform, product-class and public repositories | Accept a status from any identity other than the one pinned for that context |
+| Deploy staging | Built, not in service | Shared staging adapter with a staging-only credential in a branch-restricted environment; the credential model is designed, and no such credential is provisioned yet | Deploy one product's staging project | Reach production, which the provider refuses for a project-scoped token; that refusal is to be demonstrated before first use |
+| Promote to production | Planned | Product and environment specific deployment identity | Promote one approved, immutable candidate | Be reached from the agent account or an untrusted build |
 
 ## Where a human still intervenes
 
