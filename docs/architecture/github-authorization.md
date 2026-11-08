@@ -5,7 +5,7 @@ Last verified: 2026-11-08
 Status: **Implemented.**
 Per-command tokens since 2026-10-06; the key broker has held the only App key since 2026-10-13.
 
-The engineering agent reaches GitHub through one path: a GitHub App installation token for exactly one repository and one permission profile, minted for a single command and normally revoked when that command ends.
+The engineering agent authenticates to GitHub through one path: a GitHub App installation token for exactly one repository and one permission profile, minted for a single command and normally revoked when that command ends.
 The App's private key lives with a separate service account, the key broker, which the agent can ask for a token but can never read.
 
 ## Why a GitHub App, and why not a token on disk
@@ -43,11 +43,11 @@ Scripts and actions that workflows run are ordinary repository code: the agent c
 
 The client wrapper the agent uses does the following for every `git` or `gh` operation, and refuses before any child process runs if any step fails:
 
-1. **Work out the repository.** The checkout's `origin` is normalized to `owner/repo` and must be on an allowlist installed root-owned, where the agent cannot edit it; the broker's own root-owned policy checks the repository again when it mints, and that is the binding check. A second GitHub remote, or repository Git configuration that rewrites URLs, sets credential helpers, adds headers or proxies, or swaps the SSH command, is refused.
+1. **Work out the repository.** The checkout's `origin` is normalized to `owner/repo` and must be on an allowlist installed root-owned, where the agent cannot edit it; the broker's own root-owned policy checks the repository again when it mints, and that is the binding check. A GitHub remote for any other repository, or repository Git configuration that rewrites URLs, sets credential helpers, adds headers or proxies, or swaps the SSH command, is refused.
 2. **Refuse ambient credentials.** Any GitHub token variable, askpass helper, Git configuration override or token-shaped value in the environment is a refusal.
 3. **Get a token from the broker** for that repository and either the `read` or the `write` profile.
-4. **Verify the token independently.** It must be an installation token of the expected shape, expire within the hour, be limited to selected repositories, list exactly the one requested repository, and carry exactly the requested permissions: nothing extra, nothing higher, nothing missing.
-5. **Run one child process** with an environment built from nothing. Git gets an ephemeral askpass helper and has its credential helpers, user configuration and system configuration disabled for that invocation; the GitHub CLI gets an empty, throwaway configuration directory. GitHub CLI commands outside a small set (`pr`, `issue`, `api`, `repo`, `label`) and obvious cross-repository arguments are refused; the token's single-repository scope is the actual boundary.
+4. **Verify the token independently.** It must be an installation token of the expected shape, expire within the hour, be limited to selected repositories, list exactly the one requested repository, and list every requested permission, with nothing extra and nothing at a higher level.
+5. **Run one child process** with an environment built explicitly rather than inherited. Git gets an ephemeral askpass helper and has its credential helpers, user configuration and system configuration disabled for that invocation; the GitHub CLI gets an empty, throwaway configuration directory. GitHub CLI commands outside a small set (`pr`, `issue`, `api`, `repo`, `label`) and obvious cross-repository arguments are refused; the token's single-repository scope is the actual boundary.
 6. **Revoke the token.** It is normally revoked when the command ends, whether the command succeeded or failed; GitHub's one-hour expiry is the hard bound, and repository scope, not lifetime, is the enforced boundary.
 
 The wrapper has no command that prints a token.
@@ -88,7 +88,7 @@ flowchart TD
     app -->|"5. token"| mintfn
     mintfn -->|"6. verified grant"| cli
     cli -->|"7. verify again,<br/>run one command"| child --> repo
-    cli -->|"8. revoke when<br/>the command ends"| app
+    cli -->|"8. revoke, normally<br/>when the command ends"| app
 
     %% An invisible spacer keeps the diagram clear of the pan and zoom
     %% controls GitHub draws over its bottom-right corner (CONTRIBUTING.md).
@@ -122,7 +122,7 @@ There is no operation that returns a key, a JWT, or a token outside a mint grant
 | Caller not in the policy | Refused before its request is read |
 | Repository or profile not granted | Refused, no GitHub call |
 | Too many requests in flight, or too many per minute | Refused immediately, no queue |
-| GitHub slow, unreachable, or answering with the wrong App, installation or token | Refused; every GitHub call is time-bounded |
+| GitHub slow, unreachable, or answering with the wrong App, installation or token | Refused; every GitHub call has a timeout |
 | A grant that cannot be delivered | Revoked at once |
 | Broker down, socket missing, wrong owner, wrong peer | The client refuses. There is no fallback to a key on disk, a personal token, or the founder's credentials. |
 
@@ -151,7 +151,7 @@ Closing that gap would need a session identity the broker can verify independent
 
 Three things must agree before a repository works: the App installation's repository selection on GitHub, the broker's policy, and the client's installed allowlist.
 The broker reads its policy only when it starts, and the live self-check, which the broker runs at the client's request, compares the broker's installed allowlist with the installation's selection as an exact set, so the change is applied in one short, ordered window: merge the change, select the repository on the installation, install and restart the broker, install the client, then verify.
-Verification includes proving that a token for the new repository cannot read the existing ones and that their tokens cannot read it.
+Verification includes proving that a token for the new repository cannot read the existing private repositories or write to the existing public ones, and that their tokens cannot read it.
 
 Each repository is a separate founder decision recorded on a ticket.
 The allowlist currently names five repositories, and the live self-check fails whenever the allowlist and the installation's selection are not the same set.
@@ -160,7 +160,7 @@ The allowlist currently names five repositories, and the live self-check fails w
 
 The client and the broker are tested against an in-process fake GitHub that independently verifies every JWT's signature and claims, with test keys generated at run time so no key is ever committed.
 The broker tests run on a real Unix socket and read real kernel peer credentials; because the suite runs as one account, the broker's view of the caller is then mapped to simulated accounts.
-They cover caller authorization, scoping, a wrong grant handed over by an impostor at the socket, malformed and hostile requests, size and time limits, leakage of tokens, JWTs and keys into output, logs, responses and files, GitHub failures, broker unavailability without fallback, concurrency limits, rate limits, revocation on every normal and error path, and draining in-flight requests on shutdown.
+They cover caller authorization, scoping, a wrong grant handed over by an impostor at the socket, malformed and hostile requests, size and time limits, leakage of tokens, JWTs and keys into output, logs, responses and files, GitHub failures, broker unavailability without fallback, concurrency limits, rate limits, revocation after use, when the command fails, on refusal, when a grant cannot be delivered and on broker shutdown, and draining in-flight requests on shutdown.
 
 ## Related
 

@@ -109,7 +109,7 @@ With one slot, queue order decides how long a pull request stays unmergeable, so
 
 1. Reviews into a protected branch run before advisory reviews of other branches.
 2. Higher declared project priority first.
-3. Human or agent pull requests before bot pull requests, within a priority tier.
+3. Pull requests from human accounts before those from bot and App accounts, which include the engineering agent's, within a priority tier.
 4. A pull request that has already been reviewed once and had a fix pushed runs before one nobody has looked at yet.
 5. Oldest first, by the first time any version of the pull request was queued.
 
@@ -128,6 +128,7 @@ GitHub refuses to render diffs above 20,000 lines, so for exactly that refusal t
 It takes the merge base from GitHub's compare endpoint rather than from its own shallow mirror, because a shallow repository does not reliably refuse ancestry questions: when its boundary hides history it can answer them wrongly, and the wrong answers look exactly like real ones.
 It then checks the local result against GitHub's own file, addition and deletion counts and fails the run on any mismatch, because an incomplete diff is indistinguishable from a smaller, cleaner change.
 A diff is never truncated to fit; it is split into parts the model reads in order, and a diff too large even for that fails the review.
+Configured machine-generated evidence files are the exception: the diff shows them as a hashed manifest, and they stay readable through the tools.
 
 ## Containment
 
@@ -136,7 +137,7 @@ The reviewer reads attacker-controlled content and publishes to pull requests, s
 **No built-in tools.**
 Claude Code is launched with every built-in tool removed: no shell, no file read or write, no web access, no sub-agents.
 Repository access comes only from a controller-owned server exposing four read-only tools: list files, literal search, read a file, read a line range.
-Before trusting the session, the controller reads the session's initialization event and aborts unless the registered tool set is exactly those four and the server is connected.
+Before trusting the session, the controller reads the session's initialization event and aborts unless the registered tool set is exactly those four plus the CLI's structured-output tool and the server is connected.
 That check exists because the CLI can silently drop a tool setting it does not accept, and does not report refused tool calls, so a misconfigured session would otherwise fail open.
 
 **Layers, each enforced in code and covered by tests:**
@@ -145,7 +146,7 @@ That check exists because the CLI can silently drop a tool setting it does not a
 2. **Literal search.** No regular expression is ever compiled from model input.
 3. **OS sandbox.** The repository server runs under macOS `sandbox-exec` with no network, no file reads anywhere under the user home directories, the system configuration directory or the root account's home, and no writes under the user home directories, apart from read access to the worktree, the review artifacts and its own code. Other system files and file metadata stay readable. Each start verifies the denial against the reviewer's real private key.
 4. **Secret separation.** Child processes get an environment built from an explicit allowlist. The App key and tokens never reach the model or the repository server.
-5. **Publication guard.** The exact outbound payload is scanned for credential shapes and for the live token and key by value and fingerprint, before it is stored and before it is sent. A hit publishes nothing.
+5. **Publication guard.** The exact outbound payload is scanned for credential shapes and for the live token and key by value and fingerprint, before it is stored and before it is sent. A hit publishes none of the payload; only a fixed error status is written.
 6. **Output neutralization.** Mentions and leading slash commands in model text are defused, so a prompt-injected review cannot notify people or command other bots.
 
 Two layers are also checked at run time. The daemon refuses to start unless the OS sandbox proves its denials on this machine, and each review session is aborted unless it registered exactly the expected tool set. The other layers are not re-checked at startup.
@@ -176,7 +177,7 @@ A standalone version of this policy, with tests, is in [`examples/verdict-policy
 
 The model also has a bounded budget of turns and wall-clock time, divided into exploration, verification and synthesis phases that the repository server enforces in-band.
 A run that ends without a valid result is an error, never a pass.
-The controller changes a model verdict in one bounded case: when it has verified from Git that a pull request is an exact rollback, it lowers findings in files the rollback restored byte-identical to P3, and if those were the only blocking findings, the model's `CHANGES_REQUIRED` becomes `PASS`, with a note on the review saying so.
+The controller changes a model verdict in one bounded case: when it has verified from Git that a pull request is an exact rollback, it lowers findings the model tagged as restored baseline, in files the rollback restored byte-identical, to P3, and if those were the only blocking findings, the model's `CHANGES_REQUIRED` becomes `PASS`, with a note on the review saying so.
 A promotion pull request, which carries already-reviewed changes to another protected branch, is decided from the earlier authoritative reviews without a model run when they cover every change or one of them already failed.
 
 ## Publishing and merge gating
@@ -215,11 +216,12 @@ It deliberately ignores other identities' writes rather than reacting to them, b
 
 A run moves through these states.
 A queued run is checked again before it starts, and is retired as stale if its pull request moved, closed or changed ticket scope, or as an error if GitHub cannot be read for it.
-A run that fails before the model ran goes back to the queue with its attempt refunded, and so does a run the daemon was stopped in.
+A run that fails before the model ran goes back to the queue with its attempt refunded; a run the daemon was stopped in is also requeued, with its attempt still charged.
 Any other failure while running is an error, charged as an attempt.
-Once the controller has decided, the decision is stored and the run is `publishing`; a failed publication stays there and is retried from the stored result.
-A publication that the secret scan blocks, or whose repository is no longer accessible, ends in error.
-A run interrupted while publishing is settled if its review already landed, and requeued if it did not.
+Once the controller has decided, the decision and the review are stored and the run is `publishing`.
+A failed publication stays there and is retried from the stored result until it lands; after a bounded number of attempts, or when GitHub refuses it permanently, retrying stops and the run stays in `publishing` with a recorded diagnostic.
+A publication that the secret scan blocks ends in error.
+A run interrupted while publishing is completed from its stored result, never by running the model again.
 `passed`, `failed` and `needs_deeper_review` record the controller's decision; the enforcement status is a separate write, and when its preconditions fail no gate is published and the pull request stays blocked.
 An `error` or `stale` run is queued again while it is under the attempt ceiling and its generation is current, and an operator re-review can requeue a settled run, or an exhausted one that only ever failed for reasons outside the review.
 
@@ -239,11 +241,10 @@ flowchart TD
     running -->|"head or<br/>base moved"| stale
     running -->|"charged<br/>failure"| error
     running -->|"controller<br/>decided"| publishing
-    publishing -->|"publication<br/>retried"| publishing
+    publishing -->|"retried from the<br/>stored result"| publishing
     publishing -->|"review<br/>published"| settled
     publishing -->|"moved before<br/>publication"| stale
-    publishing -->|"secret scan hit<br/>or repository gone"| error
-    publishing -->|"interrupted,<br/>not landed"| queued
+    publishing -->|"secret<br/>scan hit"| error
     error -->|"retry or<br/>re-review"| queued
     stale -->|"current<br/>again"| queued
     settled -->|"operator<br/>re-review"| queued
@@ -257,7 +258,7 @@ flowchart TD
     class spacer spacer;
 ```
 
-Every state and transition shown exists in the reviewer today; one box stands for the three decision states, which share their transitions, and there is no final state, because any run can be queued again within its bounds.
+Every state and transition shown exists in the reviewer today, for runs recorded by the current release; one box stands for the three decision states, which share their transitions, and there is no final state, because any run can be queued again within its bounds.
 
 ## Running it as a service
 
@@ -265,7 +266,7 @@ The reviewer gates merges in several repositories, so an accidental or malicious
 
 - **Sealed releases.** The service never runs from a development checkout. A release is one merged commit, extracted from Git objects, built and tested in place, recorded with a hash of every installed source file and a digest of the build, and sealed read-only. Installed dependencies are not hashed. Activation runs the release's self-check, which refuses if any recorded file or the build differs; the daemon does not repeat it at each start.
 - **A dedicated service account.** Since 2026-10-29 the reviewer runs as a hidden, non-admin system account from root-owned copies of the release, and since 2026-10-30 with pinned copies of Node.js, checked against its published checksums and its publisher's signing team, and of the Claude CLI, checked for a valid code signature. The founder's own processes, including AI agent sessions, can no longer rewrite the running gate without an administrator prompt. The local model server it calls is not part of that account, as [decision 1](../decisions/01-separate-implementer-and-reviewer.md) records.
-- **Exactly one publisher.** A starting daemon refuses while any other reviewer process runs on the host, and the two installation forms refuse each other.
+- **Exactly one publisher.** A starting daemon refuses while any other installed reviewer process runs on the host, and the two installation forms refuse each other.
 - **Changing the reviewer is reviewed by the deployed reviewer.** A pull request that changes the reviewer is reviewed by the release built from `main`, which does not contain the change. Merging deploys nothing; a separate, privileged activation does.
 
 ## How well it works
@@ -283,7 +284,7 @@ The headline numbers:
 | Runs ending in error after the service cutover | 23 of 122 (19%), mostly two infrastructure incidents |
 
 The p95 uses linear interpolation between ranks.
-The queue figures were corrected on 2026-11-08: the earlier 4.5 and about 90 minutes had been computed on 31 values, one more than the 30-row sample.
+The queue figures were corrected on 2026-11-08: the earlier 4.5 and 89.5 minutes had been computed on 31 values, one more than the 30-row sample.
 The full table, method and caveats are on the [evidence page](../evidence/README.md#reviewer-audit-2026-11-01).
 The conclusion drawn from it was to keep the reviewer as the required gate, fix how it spends its single slot rather than add features, and freeze feature work for a month.
 

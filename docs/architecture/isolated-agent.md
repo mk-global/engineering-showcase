@@ -126,13 +126,13 @@ It checks, in broad groups:
 - **Account shape.** Group memberships, primary group, home ownership and mode.
 - **Founder paths.** The locations of the founder's credentials and the reviewer's state cannot be read, listed or traversed.
 - **Other homes.** Every other account's home, including the CI runner accounts, cannot be read or traversed.
-- **Indirect routes.** A symlink the agent creates still cannot read a protected key; pointing the GitHub CLI at the founder's configuration directory yields no login; the founder's SSH agent socket refuses the account.
+- **Indirect routes.** A symlink the agent creates still cannot read a protected key; pointing the GitHub CLI at the founder's configuration directory yields no login; and, when the check is given the founder's SSH agent socket, that socket refuses the account.
 - **Ambient credentials.** The current shell, a login shell and an interactive shell carry no GitHub token variables, askpass helpers, Git configuration overrides, token-shaped values or paths into the founder's home, and neither does the launchd environment.
 - **Stored credentials.** No credential files, no token-shaped values in startup or configuration files, no GitHub item in the keychain, and no small file in the home that starts with a private-key header.
 - **Real network behavior.** For each checkout, a read and a dry-run push are made against GitHub, and the check reads Git's own HTTP trace to confirm no `Authorization` header was sent. A successful push always fails the check.
 - **Container engines.** No engine answers the Docker CLI, and no Docker host or context is set in the environment.
 - **Broker key.** The broker's key directory cannot be listed and the key cannot be opened.
-- **Tools.** Every required tool resolves outside every other user's home, so a tool cannot be swapped by another account.
+- **Tools.** Every required tool resolves outside every other user's home.
 
 Two rules make the result trustworthy rather than optimistic.
 A probe that cannot be decided, for example because GitHub is unreachable, is `UNVERIFIED`, and `UNVERIFIED` fails the run.

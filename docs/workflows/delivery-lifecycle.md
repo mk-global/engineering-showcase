@@ -27,7 +27,7 @@ flowchart TD
 
     subgraph stg["Staging: built, not in service"]
         sd["Deploy the exact<br/>commit"]
-        si["Prove the served build<br/>and its backend"]
+        si["Wait until served and<br/>check its backend"]
     end
 
     subgraph prd["Production: planned"]
@@ -127,7 +127,7 @@ Its check of a repository's governance workflow references is simpler: a line ma
 
 An onboarding operation reads the organization's intended state from one declarative inventory: runner classes and their members, the released version of each component, the governance workflows and the contexts they produce, repository classes with their rulesets, and each repository's class.
 It can onboard one repository, verify one, or audit the whole organization against live GitHub in both directions, reporting anything present but not declared and anything declared but not present.
-Verify and audit fail a repository whose default branch does not carry the released governance versions.
+Since 2026-11-08, verify and audit fail a repository whose default branch does not carry the released governance versions.
 It is idempotent: a conforming repository produces zero changes, and two runs against the same live state compute the same plan.
 It fails closed, reporting a blocked step with the permission it needed rather than skipping it.
 It adds a repository to the private runner group only when the inventory declares it, or while it creates or adopts that repository as a governed one, and refuses any change that would widen the group's visibility or admit public repositories.

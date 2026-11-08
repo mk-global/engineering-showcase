@@ -87,7 +87,7 @@ The deferral is bounded at eight in a row, so a probe that misreports cannot hol
 *2026-10-29 to 2026-11-01.*
 Reviews of a branch where the review was not even required held 36% of the reviewer's slot over three days, and authoritative reviews waited behind them for half of all measured waiting time.
 The scheduler now selects every required review before any advisory one.
-The fix was a selection rule, deliberately not preemption, so a running review always finishes.
+The fix was a selection rule, deliberately not preemption, so the scheduler never preempts a running review.
 
 ## False positives invite placating code
 
