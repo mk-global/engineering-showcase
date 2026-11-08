@@ -146,7 +146,7 @@ That check exists because the CLI can silently drop a tool setting it does not a
 2. **Literal search.** No regular expression is ever compiled from model input.
 3. **OS sandbox.** The repository server runs under macOS `sandbox-exec` with no network, no file reads anywhere under the user home directories, the system configuration directory or the root account's home, and no writes under the user home directories, apart from read access to the worktree, the review artifacts and its own code. Other system files and file metadata stay readable. Each start verifies the denial against the reviewer's real private key.
 4. **Secret separation.** Child processes get an environment built from an explicit allowlist. The App key and tokens never reach the model or the repository server.
-5. **Publication guard.** The exact outbound payload is scanned for credential shapes and for the live token and key by value and fingerprint, before it is stored and before it is sent. A hit publishes none of the payload; only a fixed error status is written.
+5. **Publication guard.** The exact outbound payload is scanned for credential shapes and for the live token and key by value and fingerprint, before it is stored and before it is sent. A hit publishes none of the payload; at most a fixed error status is written.
 6. **Output neutralization.** Mentions and leading slash commands in model text are defused, so a prompt-injected review cannot notify people or command other bots.
 
 Two layers are also checked at run time. The daemon refuses to start unless the OS sandbox proves its denials on this machine, and each review session is aborted unless it registered exactly the expected tool set. The other layers are not re-checked at startup.
@@ -219,9 +219,9 @@ A queued run is checked again before it starts, and is retired as stale if its p
 A run that fails before the model ran goes back to the queue with its attempt refunded; a run the daemon was stopped in is also requeued, with its attempt still charged.
 Any other failure while running is an error, charged as an attempt.
 Once the controller has decided, the decision and the review are stored and the run is `publishing`.
-A failed publication stays there and is retried from the stored result until it lands; after a bounded number of attempts, or when GitHub refuses it permanently, retrying stops and the run stays in `publishing` with a recorded diagnostic.
+A failed publication stays there and is retried from the stored result until it lands; after a bounded number of attempts, or when GitHub refuses it permanently, automatic retrying stops and the run stays in `publishing` with a recorded diagnostic.
 A publication that the secret scan blocks ends in error.
-A run interrupted while publishing is completed from its stored result, never by running the model again.
+A run recorded by the current release that is interrupted while publishing resumes from its stored result rather than running the model again.
 `passed`, `failed` and `needs_deeper_review` record the controller's decision; the enforcement status is a separate write, and when its preconditions fail no gate is published and the pull request stays blocked.
 An `error` or `stale` run is queued again while it is under the attempt ceiling and its generation is current, and an operator re-review can requeue a settled run, or an exhausted one that only ever failed for reasons outside the review.
 

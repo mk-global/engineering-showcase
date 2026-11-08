@@ -122,7 +122,7 @@ There is no operation that returns a key, a JWT, or a token outside a mint grant
 | Caller not in the policy | Refused before its request is read |
 | Repository or profile not granted | Refused, no GitHub call |
 | Too many requests in flight, or too many per minute | Refused immediately, no queue |
-| GitHub slow, unreachable, or answering with the wrong App, installation or token | Refused; every GitHub call has a timeout |
+| GitHub slow, unreachable, or answering with the wrong App, installation or token | Refused; every GitHub API call the client and broker make has a timeout |
 | A grant that cannot be delivered | Revoked at once |
 | Broker down, socket missing, wrong owner, wrong peer | The client refuses. There is no fallback to a key on disk, a personal token, or the founder's credentials. |
 
