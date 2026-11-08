@@ -7,7 +7,7 @@ I built it because an agent that runs as its developer's own account can use eve
 Today the platform runs the agent under its own restricted operating-system account, gives it a GitHub token for one repository at a time, has a separate local AI reviewer judge the exact commit it produced, and lets GitHub merge only when every required check passed at that commit.
 To explore, start with the [operating model](docs/operating-model.md), then the [evidence and status page](docs/evidence/README.md) for what is proven and what is not.
 
-I'm Manish Kumar.
+I'm Manish Kumar, the founder of MK Global; where these pages say "the founder", they mean me.
 I've spent about twenty years in engineering, cloud infrastructure, SRE, security and technical leadership, and since August 2026 I have been building this platform, which my own products are developed on.
 Its source is private, so this repository explains its architecture, the decisions behind it, the mistakes that shaped it and the evidence for what it does today, without publishing the operational details that keep it safe.
 
@@ -98,7 +98,8 @@ An earlier version of this page gave queue figures computed on 31 values; the [e
 
 I have not measured deployment frequency, engineering effort saved or the reviewer's recall, and the showcase does not claim them.
 
-For scale: as of the morning of 2026-11-07, the platform repository had 386 commits, 136 merged pull requests and 205 tickets since 2026-08-13.
+For scale: this is a single-owner platform on one Mac, and its reviewer is configured for ten private and public repositories.
+As of the morning of 2026-11-07, the platform repository had 386 commits, 136 merged pull requests and 205 tickets since 2026-08-13.
 
 ## Reading path
 
@@ -107,7 +108,7 @@ For a ten-minute version, read this page and the operating model.
 
 1. [Operating model](docs/operating-model.md): the whole flow and the design philosophy behind it.
 2. [Independent local AI reviewer](docs/architecture/independent-reviewer.md): the deepest technical piece.
-3. [Engineering decisions](docs/decisions/README.md): six decisions, including two I reversed.
+3. [Engineering decisions](docs/decisions/README.md): six decisions, including two I reversed, such as removing a founder-approval rule a few days after I built it.
 4. [Lessons](docs/lessons/README.md): failures the system found in itself and what changed.
 5. [Evidence and status](docs/evidence/README.md) and the [roadmap](docs/roadmap.md): what is proven, what is not, and what comes next.
 
